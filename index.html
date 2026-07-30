@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Soshi Motomura ─ 作品集</title>
+<meta name="description" content="Soshi Motomura の作品集。干支大全(ブラウザゲーム)・くらしマップ・ジオピース。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --washi: #F3F2ED;
+    --sumi: #201E1B;
+    --usuzumi: #6F6B63;
+    --shu: #C2402F;
+    --ai: #35507A;
+    --line: rgba(32,30,27,.14);
+    color-scheme: light;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--washi);
+    /* 和紙の繊維感:ごく薄い斑を重ねる */
+    background-image:
+      radial-gradient(ellipse 900px 500px at 15% 8%, rgba(32,30,27,.025), transparent),
+      radial-gradient(ellipse 700px 600px at 90% 70%, rgba(53,80,122,.02), transparent);
+    color: var(--sumi);
+    font-family: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", sans-serif;
+    font-size: 15px;
+    line-height: 1.9;
+    letter-spacing: .04em;
+  }
+  .scroll { max-width: 720px; margin: 0 auto; padding: 72px 24px 96px; }
+
+  /* ── 表題 ── */
+  header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 20px; }
+  .title-block .eyebrow {
+    font-size: .78rem; letter-spacing: .3em; color: var(--usuzumi); margin-bottom: 10px;
+  }
+  h1 {
+    font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", serif;
+    font-weight: 800; font-size: clamp(2rem, 6vw, 2.8rem);
+    letter-spacing: .12em; line-height: 1.3;
+  }
+  .title-block p { margin-top: 14px; color: var(--usuzumi); max-width: 34em; }
+  /* 落款(らっかん)─ このページの署名 */
+  .hanko {
+    flex: none; width: 58px; height: 58px; margin-top: 8px;
+    background: var(--shu); color: var(--washi);
+    font-family: "Shippori Mincho B1", serif; font-weight: 800; font-size: 1.9rem;
+    display: grid; place-items: center;
+    border-radius: 6px; transform: rotate(-3deg);
+    box-shadow: inset 0 0 0 2px rgba(243,242,237,.35), inset 0 0 14px rgba(120,20,10,.35);
+    animation: stamp .45s cubic-bezier(.2, 1.6, .4, 1) .3s backwards;
+  }
+  @keyframes stamp {
+    from { transform: rotate(-3deg) scale(2.2); opacity: 0; }
+    to   { transform: rotate(-3deg) scale(1); opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) { .hanko { animation: none; } }
+
+  /* ── 作品の段 ── */
+  .works { margin-top: 56px; display: flex; flex-direction: column; }
+  .work {
+    display: grid; grid-template-columns: 5rem 1fr; gap: 20px;
+    padding: 44px 0;
+    border-top: 1px solid var(--line);
+  }
+  .work:last-of-type { border-bottom: 1px solid var(--line); }
+  /* 縦書きの題字 */
+  .work-title {
+    font-family: "Shippori Mincho B1", "Hiragino Mincho ProN", serif;
+    font-weight: 800; font-size: 1.9rem; letter-spacing: .18em; line-height: 1;
+    writing-mode: vertical-rl; text-orientation: upright;
+    justify-self: center; min-height: 8.5em;
+  }
+  .work-body { align-self: center; }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .tag {
+    font-size: .72rem; letter-spacing: .14em; color: var(--ai);
+    border: 1px solid currentColor; border-radius: 2px; padding: 1px 9px;
+  }
+  .tag.now { color: var(--shu); }
+  .work-body p { color: var(--sumi); max-width: 32em; }
+  .work-body .note { font-size: .82rem; color: var(--usuzumi); margin-top: 6px; }
+  .work-link {
+    display: inline-block; margin-top: 18px;
+    font-weight: 700; font-size: .92rem; letter-spacing: .1em;
+    color: var(--sumi); text-decoration: none;
+    border-bottom: 2px solid var(--shu); padding-bottom: 2px;
+    transition: color .2s;
+  }
+  .work-link:hover, .work-link:focus-visible { color: var(--shu); }
+  .work-link:focus-visible { outline: 2px solid var(--ai); outline-offset: 4px; }
+  .work-link::after { content: " →"; }
+
+  footer { margin-top: 64px; text-align: center; font-size: .82rem; color: var(--usuzumi); letter-spacing: .1em; }
+  footer a { color: var(--usuzumi); }
+  footer a:hover { color: var(--shu); }
+
+  @media (max-width: 480px) {
+    .scroll { padding-top: 56px; }
+    .work { grid-template-columns: 4rem 1fr; gap: 12px; }
+    .work-title { font-size: 1.5rem; min-height: 7em; }
+  }
+</style>
+</head>
+<body>
+<div class="scroll">
+
+  <header>
+    <div class="title-block">
+      <p class="eyebrow">SOSHI MOTOMURA ─ WORKS</p>
+      <h1>作品集</h1>
+      <p>地図・パズル・ゲーム。日本の題材を素材に、Webとアプリを作っています。</p>
+    </div>
+    <div class="hanko" aria-hidden="true">創</div>
+  </header>
+
+  <main class="works">
+
+    <article class="work">
+      <h2 class="work-title">干支大全</h2>
+      <div class="work-body">
+        <div class="tags">
+          <span class="tag now">開発中 β</span>
+          <span class="tag">ブラウザゲーム</span>
+        </div>
+        <p>十二支を従え、化け猫の軍勢から「十三番目の椅子」を守る横スクロール・ラインディフェンス。順番連携・三合・刻 ─ 干支の暦にちなんだ三つの独自メカニクス。墨絵×ゆるかわの絵巻物調。</p>
+        <p class="note">インストール不要・そのまま遊べます(PC推奨)</p>
+        <a class="work-link" href="/eto-taizen/">ブラウザで遊ぶ</a>
+      </div>
+    </article>
+
+    <article class="work">
+      <h2 class="work-title">くらしマップ</h2>
+      <div class="work-body">
+        <div class="tags">
+          <span class="tag">Webサービス</span>
+          <span class="tag">地図</span>
+        </div>
+        <p>市区町村の住みやすさを、地図の上で横断比較。引っ越し先えらびの「なんとなく」を、データで確かめられるように。</p>
+        <a class="work-link" href="https://kurashimap.jp/">kurashimap.jp を開く</a>
+      </div>
+    </article>
+
+    <article class="work">
+      <h2 class="work-title">ジオピース</h2>
+      <div class="work-body">
+        <div class="tags">
+          <span class="tag">パズルゲーム</span>
+        </div>
+        <p>実在する47都道府県の「形」で遊んで覚える、落ちもの&amp;積みものパズル。遊ぶほど日本地図に強くなる。</p>
+        <a class="work-link" href="https://soshi-1114.github.io/geopiece-site/">紹介ページを見る</a>
+      </div>
+    </article>
+
+  </main>
+
+  <footer>
+    <p>© 2026 Soshi Motomura ・ <a href="https://github.com/Soshi-1114">GitHub</a></p>
+  </footer>
+
+</div>
+</body>
+</html>

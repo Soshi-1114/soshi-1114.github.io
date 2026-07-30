@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>干支大全 デモ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --washi:#f3ead8; --sumi:#2b2620; --shu:#c73e2c; --kin:#b8912f;
+    --matsu:#4a6741; --mizu:#4a6fa5; --kage:#d9cdb4;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    background:var(--sumi);
+    font-family:"Zen Maru Gothic",sans-serif;color:var(--sumi);
+    display:flex;justify-content:center;align-items:flex-start;
+    touch-action:manipulation;
+  }
+  #app{
+    width:100%;max-width:900px;background:var(--washi);
+    background-image:radial-gradient(ellipse at 20% 10%, rgba(184,145,47,.08), transparent 50%),
+                     radial-gradient(ellipse at 85% 90%, rgba(199,62,44,.05), transparent 45%);
+    border-left:12px solid var(--shu);border-right:12px solid var(--shu);
+    box-shadow:0 0 40px rgba(0,0,0,.6);user-select:none;
+  }
+  header{display:flex;align-items:center;gap:12px;padding:10px 14px 2px;}
+  .hanko{
+    font-family:"Yuji Syuku",serif;background:var(--shu);color:var(--washi);
+    width:48px;height:48px;border-radius:6px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;line-height:1.05;text-align:center;
+    transform:rotate(-3deg);box-shadow:1px 1px 0 rgba(0,0,0,.25);flex:none;
+  }
+  h1{font-family:"Yuji Syuku",serif;font-size:clamp(19px,4vw,27px);letter-spacing:.14em;font-weight:400;}
+  h1 small{font-size:.48em;color:var(--kin);letter-spacing:.18em;margin-left:8px;}
+  .stageline{
+    padding:0 14px 4px;font-size:12px;font-weight:700;color:#7a5c10;
+    display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+  }
+  .stageline .snum{font-family:"Yuji Syuku",serif;color:var(--shu);font-size:15px;}
+  .stSel{padding:3px 9px !important;font-size:11px !important;}
+  .tokiline{
+    display:flex;align-items:center;gap:8px;
+    padding:2px 14px 6px;font-size:12px;font-weight:700;
+  }
+  .tokiline .tk{
+    background:var(--sumi);color:var(--washi);
+    border-radius:6px;padding:2px 10px;font-family:"Yuji Syuku",serif;letter-spacing:.1em;
+  }
+  .tokiline .tkbar{flex:1;height:6px;background:var(--kage);border-radius:3px;overflow:hidden;}
+  .tokiline .tkbar i{display:block;height:100%;background:var(--kin);}
+  .hpbars{display:flex;justify-content:space-between;gap:14px;padding:2px 14px 8px;font-size:11px;font-weight:700;}
+  .hpwrap{flex:1;}
+  .hpwrap .label{display:flex;justify-content:space-between;margin-bottom:2px;}
+  .bar{height:10px;background:var(--kage);border-radius:5px;overflow:hidden;border:1px solid rgba(43,38,32,.25);}
+  .bar i{display:block;height:100%;border-radius:5px;transition:width .2s;}
+  .bar.ally i{background:var(--matsu);}
+  .bar.foe i{background:var(--shu);}
+  #cvWrap{position:relative;}
+  #cv{display:block;width:100%;}
+  #banner{
+    position:absolute;left:0;right:0;top:30%;text-align:center;pointer-events:none;
+    font-family:"Yuji Syuku",serif;font-size:clamp(22px,5vw,34px);
+    letter-spacing:.25em;color:var(--shu);
+    text-shadow:0 0 12px rgba(243,234,216,.95);
+    opacity:0;transition:opacity .3s;
+  }
+  #renkei{
+    position:absolute;left:0;right:0;top:22%;
+    text-align:center;pointer-events:none;opacity:0;
+  }
+  #renkei.on{animation:stampIn 1.4s ease-out forwards;}
+  @keyframes stampIn{
+    0%{opacity:0;transform:scale(2.2) rotate(-10deg);}
+    12%{opacity:1;transform:scale(1) rotate(-4deg);}
+    22%{transform:scale(1.08) rotate(-4deg);}
+    30%{transform:scale(1) rotate(-4deg);}
+    78%{opacity:1;}
+    100%{opacity:0;transform:scale(1) rotate(-4deg) translateY(-8px);}
+  }
+  #renkei .pair{
+    display:inline-block;
+    font-family:"Yuji Syuku",serif;
+    font-size:clamp(30px,7vw,52px);letter-spacing:.1em;
+    color:var(--washi);
+    background:var(--shu);
+    border:3px solid rgba(43,38,32,.5);
+    border-radius:10px;
+    padding:2px 18px 6px;
+    box-shadow:3px 3px 0 rgba(43,38,32,.4), 0 0 26px rgba(199,62,44,.45);
+  }
+  #renkei .cnt{
+    display:block;margin-top:4px;
+    font-family:"Yuji Syuku",serif;
+    font-size:clamp(15px,3.4vw,22px);letter-spacing:.3em;
+    color:var(--kin);
+    text-shadow:0 0 10px rgba(243,234,216,.95), 1px 1px 0 rgba(43,38,32,.4);
+  }
+  .chainline{
+    display:flex;align-items:center;gap:8px;
+    padding:5px 14px 0;font-size:11.5px;font-weight:700;color:#7a6f5c;
+  }
+  .chainline .nz{
+    font-family:"Yuji Syuku",serif;font-size:15px;color:var(--mizu);
+    background:#fbf6ea;border:2px solid var(--mizu);border-radius:8px;
+    padding:0 9px 2px;
+  }
+  .chainline .ch{color:var(--kin);font-family:"Yuji Syuku",serif;letter-spacing:.15em;}
+  .hud{display:flex;align-items:center;gap:10px;padding:8px 14px 4px;flex-wrap:wrap;}
+  .kaki{font-weight:700;font-size:17px;min-width:112px;}
+  .kaki small{display:block;font-size:10px;font-weight:500;color:#7a6f5c;}
+  button{
+    font-family:inherit;font-weight:700;
+    border:2px solid var(--sumi);border-radius:10px;
+    background:var(--washi);color:var(--sumi);
+    padding:8px 12px;font-size:13px;cursor:pointer;
+    box-shadow:2px 2px 0 var(--sumi);
+  }
+  button:active{transform:translate(2px,2px);box-shadow:none;}
+  button:disabled{opacity:.4;box-shadow:none;transform:none;cursor:default;}
+  #upBtn{border-color:var(--kin);box-shadow:2px 2px 0 var(--kin);color:#7a5c10;}
+  #speedBtn{margin-left:auto;}
+  .deck{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;padding:8px 14px 6px;}
+  .card{
+    position:relative;overflow:hidden;
+    border:2px solid var(--sumi);border-radius:12px;
+    background:#fbf6ea;box-shadow:2px 2px 0 var(--sumi);
+    padding:5px 2px 4px;cursor:pointer;text-align:center;
+    transition:border-color .2s;
+  }
+  .card:active{transform:translate(2px,2px);box-shadow:none;}
+  .card .csvg{width:clamp(30px,7vw,46px);height:auto;display:block;margin:0 auto;}
+  .card .nm{font-size:clamp(9px,1.9vw,11.5px);font-weight:700;display:block;}
+  .card .rl{font-size:clamp(8px,1.6vw,10px);color:#8a7f6a;display:block;}
+  .card .cost{font-size:clamp(9px,1.8vw,11px);color:var(--shu);font-weight:700;}
+  .card .trine{position:absolute;top:4px;left:4px;width:8px;height:8px;border-radius:50%;}
+  .card .cd{position:absolute;inset:0;background:rgba(43,38,32,.55);transform-origin:bottom;pointer-events:none;}
+  .card.poor{filter:grayscale(.7);opacity:.65;}
+  .card.toki{border-color:var(--kin);box-shadow:0 0 8px rgba(184,145,47,.7),2px 2px 0 var(--kin);}
+  .card.next{border-color:var(--mizu);}
+  .legend{
+    padding:0 14px 12px;font-size:10px;color:#8a7f6a;
+    display:flex;gap:12px;flex-wrap:wrap;letter-spacing:.03em;
+  }
+  .legend b{color:var(--sumi);}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:3px;vertical-align:1px;}
+  #overlay{
+    position:fixed;inset:0;background:rgba(43,38,32,.78);
+    display:none;align-items:center;justify-content:center;z-index:10;
+  }
+  #overlay .paper{
+    background:var(--washi);border:6px double var(--shu);
+    border-radius:8px;padding:28px 38px;text-align:center;max-width:86%;
+  }
+  #overlay h2{font-family:"Yuji Syuku",serif;font-size:33px;letter-spacing:.15em;margin-bottom:8px;}
+  #overlay p{font-size:13px;margin-bottom:18px;color:#5c5346;white-space:pre-line;line-height:1.7;}
+  footer{text-align:center;font-size:10px;color:#8a7f6a;padding:0 14px 10px;letter-spacing:.05em;line-height:1.6;}
+  @media (max-width:520px){
+    header{padding:8px 10px 2px;}
+    .deck{gap:5px;padding:8px 10px 6px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="hanko">干支<br>大全</div>
+    <h1>干支大全<small>― 十三番目の椅子 ―</small></h1>
+  </header>
+
+  <div class="stageline">
+    <span class="snum">第<span id="stNum">一</span>幕</span>
+    <span id="stName"></span>
+    <span style="margin-left:auto;display:flex;gap:5px;">
+      <button class="stSel" data-st="0">一</button>
+      <button class="stSel" data-st="1">二</button>
+      <button class="stSel" data-st="2">三</button>
+    </span>
+  </div>
+
+  <div class="tokiline">
+    <span class="tk" id="tokiName">子の刻</span>
+    <span id="tokiEmoji">🐭</span><span style="color:#7a5c10;">の刻 ─ 対応する干支が奮起(攻1.5倍)</span>
+    <span class="tkbar"><i id="tokiBar" style="width:0%"></i></span>
+  </div>
+
+  <div class="hpbars">
+    <div class="hpwrap">
+      <div class="label"><span>⛩️ 十二支の社</span><span id="allyHpTxt"></span></div>
+      <div class="bar ally"><i id="allyHp" style="width:100%"></i></div>
+    </div>
+    <div class="hpwrap">
+      <div class="label"><span id="foeHpTxt"></span><span id="foeName">化け猫の砦 🏯</span></div>
+      <div class="bar foe"><i id="foeHp" style="width:100%"></i></div>
+    </div>
+  </div>
+
+  <div id="cvWrap">
+    <canvas id="cv"></canvas>
+    <div id="banner"></div>
+    <div id="renkei"><span class="pair" id="rkPair"></span><span class="cnt" id="rkCnt"></span></div>
+  </div>
+
+  <div class="chainline">
+    <span>連携の輪:次は</span><span class="nz" id="nextZi">子</span>
+    <span id="chainMsg">十二支の順(子→丑→…)で召喚すると連携!</span>
+    <span class="ch" id="chainCnt" style="margin-left:auto;"></span>
+  </div>
+
+  <div class="hud">
+    <div class="kaki"><span style="color:var(--kin);font-family:'Yuji Syuku',serif;">氣</span> <span id="money">0</span> / <span id="moneyMax">750</span><small>気(自動で満ちる)</small></div>
+    <button id="upBtn">気脈Lv<span id="wLv">1</span>up 氣<span id="upCost">80</span></button>
+    <button id="sndBtn">🔊</button>
+    <button id="speedBtn">⏩ x1</button>
+  </div>
+
+  <div class="deck" id="deck"></div>
+
+  <div class="legend">
+    <span><b>順番連携</b>:十二支の順(子→丑→…)で召喚すると連携バフ(青枠=次の干支)</span>
+    <span><b>三合</b>:<span class="dot" style="background:#4a6fa5"></span>水局 <span class="dot" style="background:#b8912f"></span>金局 <span class="dot" style="background:#c73e2c"></span>火局 <span class="dot" style="background:#4a6741"></span>木局 ─ 同じ局が2体以上で全員攻撃強化</span>
+    <span><b>刻</b>:金枠の干支は今が見せ場</span>
+  </div>
+
+  <footer>十二支に入れなかった化け猫たちが「十三番目の椅子」を求めて攻め寄せる。<br>昔ばなし「十二支のはじまり」より ─ 個人開発プロトタイプ(仮題・商標確認前)</footer>
+</div>
+
+<div id="overlay">
+  <div class="paper">
+    <h2 id="ovTitle">勝利</h2>
+    <p id="ovMsg"></p>
+    <button id="nextBtn">次の幕へ</button>
+    <button id="retryBtn">この幕をやり直す</button>
+  </div>
+</div>
+
+<script>
+
+/* ===== src/data.js ===== */
+/* ============================================================
+   干支合戦絵巻 - data.js
+   ゲームデータ定義層。バランス調整はこのファイルのみを編集する。
+   Node(シミュレータ)とブラウザの両方から読み込まれる。
+   ============================================================ */
+(function(exp){
+"use strict";
+
+const CONST = {
+  W: 900, H: 300,
+  GROUND: 256,            // H - 44
+  ALLY_BASE_X: 40, FOE_BASE_X: 860,
+  ALLY_BASE_HP: 3000,
+  TOKI_LEN: 12,           // 1刻の秒数(デモ用短縮)
+  MONEY_MAX0: 750,        // 気の初期上限
+  MONEY_CAP_UP: 300,      // 気脈Lvアップごとの上限増加
+  INCOME_BASE: 14,        // 気の基礎収入/秒
+  INCOME_PER_LV: 6,       // 気脈Lvごとの追加収入/秒
+  UP_COST0: 80,           // 気脈Lv1→2のコスト
+  UP_COST_MUL: 1.5,       // コスト上昇率
+  START_MONEY: 200,       // 基本の初期気
+  KB_SPEED: 170,          // ノックバック後退速度
+  KB_TIME: 0.32,          // ノックバック時間
+  BOSS_PACE_MUL: 2.5,     // ボス出現後の増援間隔倍率
+  COMBO_BASE: 1.2,        // 順番連携の基礎倍率
+  COMBO_PER_CHAIN: 0.1,   // 連鎖ごとの追加倍率
+  COMBO_CHAIN_CAP: 4,     // 連鎖倍率の上限段数
+  TRINE_MUL: 1.15,        // 三合(同局2体以上)の攻撃倍率
+  TOKI_ATK_MUL: 1.5,      // 刻一致の攻撃倍率
+  TOKI_SPD_MUL: 1.2,      // 刻一致の速度倍率
+};
+
+const ZODIAC = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+const ZEMOJI = ["🐭","🐮","🐯","🐰","🐲","🐍","🐴","🐑","🐵","🐔","🐶","🐗"];
+const TRINE_NAMES = ["水局","金局","火局","木局"];           // zi%4
+const TRINE_COLORS = ["#4a6fa5","#b8912f","#c73e2c","#4a6741"];
+
+/* 十二支ユニット(zi=十二支順 0..11) */
+const UNITS = [
+  {svg:"nezumi",   emoji:"🐭", name:"鼠", zi:0,  role:"安い壁",   cost:40,  hp:120, atk:18,  spd:55,  range:22,  cd:1.4, kb:3, size:15},
+  {svg:"hitsuji",  emoji:"🐑", name:"羊", zi:7,  role:"中壁",     cost:80,  hp:340, atk:14,  spd:34,  range:24,  cd:2.6, kb:2, size:17},
+  {svg:"usagi",    emoji:"🐰", name:"兎", zi:3,  role:"速攻",     cost:100, hp:180, atk:42,  spd:95,  range:24,  cd:3,   kb:3, size:16},
+  {svg:"inu",      emoji:"🐶", name:"犬", zi:10, role:"万能",     cost:130, hp:280, atk:58,  spd:50,  range:25,  cd:4,   kb:2, size:17},
+  {svg:"niwatori", emoji:"🐔", name:"鶏", zi:9,  role:"遠距離",   cost:150, hp:140, atk:46,  spd:42,  range:130, cd:5,   kb:2, size:16},
+  {svg:"hebi",     emoji:"🐍", name:"蛇", zi:5,  role:"中距離",   cost:180, hp:170, atk:64,  spd:40,  range:100, cd:5.5, kb:2, size:16},
+  {svg:"saru",     emoji:"🐵", name:"猿", zi:8,  role:"範囲",     cost:200, hp:250, atk:50,  spd:55,  range:28,  cd:6.5, kb:3, size:17, area:true},
+  {svg:"ushi",     emoji:"🐮", name:"牛", zi:1,  role:"重戦車",   cost:220, hp:850, atk:36,  spd:22,  range:26,  cd:7.5, kb:1, size:21},
+  {svg:"uma",      emoji:"🐴", name:"馬", zi:6,  role:"突撃",     cost:250, hp:290, atk:82,  spd:85,  range:26,  cd:8,   kb:2, size:19},
+  {svg:"tora",     emoji:"🐯", name:"虎", zi:2,  role:"高火力",   cost:280, hp:370, atk:105, spd:48,  range:26,  cd:9,   kb:2, size:20},
+  {svg:"inoshishi",emoji:"🐗", name:"猪", zi:11, role:"特攻範囲", cost:320, hp:220, atk:150, spd:110, range:26,  cd:11,  kb:1, size:19, area:true},
+  {svg:"ryu",      emoji:"🐲", name:"龍", zi:4,  role:"砲台",     cost:600, hp:490, atk:180, spd:28,  range:190, cd:20,  kb:1, size:25},
+];
+
+/* 化け猫の軍勢 */
+const CATS = {
+  bake:      {svg:"bake",    emoji:"🐱", name:"化け猫",   hp:160,  atk:26,  spd:34, range:24,  kb:2, size:16, bounty:50},
+  kobake:    {svg:"kobake",  emoji:"😸", name:"仔化け",   hp:70,   atk:18,  spd:85, range:22,  kb:1, size:13, bounty:30},
+  kamaitachi:{svg:"kaze",    emoji:"😼", name:"風猫",     hp:115,  atk:42,  spd:75, range:24,  kb:2, size:16, bounty:65},
+  tate:      {svg:"tate",    emoji:"🙀", name:"甲羅猫",   hp:600,  atk:18,  spd:19, range:26,  kb:1, size:20, bounty:120},
+  nage:      {svg:"nage",    emoji:"🐈", name:"礫猫",     hp:150,  atk:40,  spd:30, range:115, kb:2, size:17, bounty:85},
+  oni:       {svg:"oni",     emoji:"😾", name:"鬼猫",     hp:850,  atk:65,  spd:16, range:26,  kb:2, size:22, bounty:200},
+  kuro:      {svg:"kuro",    emoji:"🐈‍⬛", name:"黒猫将軍", hp:2600, atk:130, spd:13, range:30,  kb:4, size:27, bounty:800, boss:true},
+  nekomata:  {svg:"nekomata",emoji:"😹", name:"猫又大王", hp:3800, atk:140, spd:12, range:55,  kb:5, size:31, bounty:1500, boss:true, area:true, atkInt:2.5},
+};
+
+/* 全三幕 */
+const STAGES = [
+  {
+    kanji:"一", name:"開戦 ─ 化け猫の襲来", castle:"化け猫の砦 🏯", castleHp:2500,
+    pace:(t)=>Math.max(2.2, 7.0 - t*0.028),
+    pool:(t)=> t<30 ? ["bake"] : t<60 ? ["bake","bake","kobake"] : ["bake","kobake","kamaitachi"],
+    bossKey:"oni", bossAt:0.5,
+    winMsg:"化け猫を退けた!物見の鼠が告げる──\n「砦の奥に黒き影あり。順番連携と三合を使いこなすのじゃ」",
+  },
+  {
+    kanji:"二", name:"黒猫将軍の砦", castle:"将軍の砦 🏯", castleHp:3500,
+    pace:(t)=>Math.max(1.8, 6.0 - t*0.032),
+    pool:(t)=> t<25 ? ["bake","kobake"] : t<55 ? ["kamaitachi","bake","tate"] : ["kamaitachi","tate","nage","kobake"],
+    bossKey:"kuro", bossAt:0.5,
+    winMsg:"黒猫将軍、討ち取ったり!\n斥候の兎が告げる──「猫又大王の薙ぎ払いは近づく者を全て薙ぐ。\n鶏・蛇・龍の射程から崩すのじゃ」",
+  },
+  {
+    kanji:"三", name:"決戦 ─ 十三番目の椅子", castle:"猫又城 🏯", castleHp:4200,
+    pace:(t)=>Math.max(1.8, 5.8 - t*0.03),
+    pool:(t)=> t<25 ? ["bake","kamaitachi"] : t<60 ? ["tate","nage","kamaitachi"] : t<90 ? ["tate","nage","kamaitachi","kobake"] : ["tate","nage","kamaitachi","kobake","oni"],
+    bossKey:"nekomata", bossAt:0.45, escort:"oni", startMoney:350,
+    bossHint:"遠距離で崩せ",
+    winMsg:"猫又大王は月夜に消えた。十三番目の椅子は誰の手にも渡らず──\n十二支に平和が戻る。来年の干支替わりの日までは。",
+  },
+];
+
+exp.CONST=CONST;
+exp.ZODIAC=ZODIAC;
+exp.ZEMOJI=ZEMOJI;
+exp.TRINE_NAMES=TRINE_NAMES;
+exp.TRINE_COLORS=TRINE_COLORS;
+exp.UNITS=UNITS;
+exp.CATS=CATS;
+exp.STAGES=STAGES;
+
+})(typeof module!=="undefined"&&module.exports?module.exports:(window.EtoData={}));
+
+/* ===== src/assets.js ===== */
+/* ============================================================
+   干支合戦絵巻 - assets.js
+   キャラ絵SVG定義層(墨絵×ゆるかわ)。
+   ルール:輪郭#2b2620 幅3.5/フラット塗り/差し色は朱・金のみ
+   ============================================================ */
+(function(exp){
+"use strict";
+
+const S='stroke="#2b2620" stroke-width="3.5" stroke-linejoin="round"';
+const S3='stroke="#2b2620" stroke-width="3" stroke-linejoin="round"';
+
+/* --- 敵猫の共通パーツ(量産用ヘルパ) --- */
+function catBody(fill){return `
+  <path d="M30,62 C28,46 40,36 54,36 C68,36 80,46 80,58 C80,70 68,76 54,76 C40,76 32,72 30,62 Z" fill="${fill}" ${S}/>
+  <path d="M40,40 L36,26 L48,34 Z" fill="${fill}" ${S3}/>
+  <path d="M64,37 L70,24 L76,36 Z" fill="${fill}" ${S3}/>`;}
+function catTail(color){return `<path d="M32,68 C18,74 12,62 20,56" fill="none" stroke="${color}" stroke-width="5.5" stroke-linecap="round"/>`;}
+function catEyesGold(){return `
+  <ellipse cx="52" cy="52" rx="4.5" ry="6" fill="#b8912f"/><ellipse cx="70" cy="52" rx="4.5" ry="6" fill="#b8912f"/>
+  <path d="M52,47 L52,57 M70,47 L70,57" stroke="#2b2620" stroke-width="2.2" stroke-linecap="round"/>`;}
+function catMouth(){return `<path d="M58,63 C60,66 64,66 66,63" fill="none" stroke="#c73e2c" stroke-width="2.4" stroke-linecap="round"/>`;}
+
+const CHARS={
+/* ===== 十二支(味方) ===== */
+nezumi:`
+  <path d="M24,66 C10,72 4,58 12,50" fill="none" stroke="#9c948a" stroke-width="5" stroke-linecap="round"/>
+  <path d="M24,62 C20,42 38,32 54,33 C68,34 80,43 88,53 C91,56 89,60 85,60 C77,69 63,75 48,75 C32,75 26,72 24,62 Z" fill="#b5aca1" ${S}/>
+  <circle cx="52" cy="30" r="11" fill="#b5aca1" ${S}/>
+  <circle cx="52" cy="30" r="5" fill="#d9a8a0"/>
+  <circle cx="70" cy="47" r="3.2" fill="#2b2620"/>
+  <circle cx="88" cy="55" r="3.4" fill="#2b2620"/>
+  <line x1="84" y1="50" x2="95" y2="46" stroke="#2b2620" stroke-width="1.6" stroke-linecap="round"/>
+  <line x1="84" y1="58" x2="96" y2="60" stroke="#2b2620" stroke-width="1.6" stroke-linecap="round"/>
+  <circle cx="74" cy="57" r="4" fill="#c73e2c" opacity=".3"/>
+  <ellipse cx="40" cy="75" rx="6" ry="3.4" fill="#9c948a" stroke="#2b2620" stroke-width="2.6"/>
+  <ellipse cx="60" cy="75" rx="6" ry="3.4" fill="#9c948a" stroke="#2b2620" stroke-width="2.6"/>`,
+
+ushi:`
+  <path d="M14,60 C6,62 4,52 10,48" fill="none" stroke="#3a3430" stroke-width="5" stroke-linecap="round"/>
+  <path d="M10,48 C6,46 6,42 9,42" fill="none" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>
+  <path d="M14,58 C14,40 32,31 52,31 C74,31 90,42 90,58 C90,70 76,78 48,78 C24,78 14,72 14,58 Z" fill="#3a3430" ${S}/>
+  <path d="M28,42 C24,52 34,58 42,52 C46,44 38,38 28,42 Z" fill="#f3ead8"/>
+  <path d="M50,64 C48,72 58,74 62,68 C62,62 54,60 50,64 Z" fill="#f3ead8"/>
+  <path d="M52,32 C46,16 62,11 61,27 M70,33 C72,15 88,16 80,32" fill="none" stroke="#efe6d6" stroke-width="5.5" stroke-linecap="round"/>
+  <path d="M46,36 C40,31 34,33 34,38" fill="none" stroke="#3a3430" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="66" cy="47" r="3.6" fill="#f3ead8"/>
+  <circle cx="67" cy="47" r="2" fill="#2b2620"/>
+  <ellipse cx="79" cy="62" rx="13" ry="9" fill="#e8d3ba" ${S3}/>
+  <circle cx="74" cy="60" r="2" fill="#2b2620"/><circle cx="84" cy="60" r="2" fill="#2b2620"/>
+  <circle cx="79" cy="69" r="3.6" fill="none" stroke="#b8912f" stroke-width="2.6"/>`,
+
+tora:`
+  <path d="M22,60 C8,58 5,46 13,42" fill="none" stroke="#d98c3f" stroke-width="6.5" stroke-linecap="round"/>
+  <path d="M15,46 L11,43 M18,52 L13,52" stroke="#2b2620" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M22,58 C22,38 42,29 56,30 C72,31 84,42 86,54 C87,66 74,75 50,75 C30,75 22,70 22,58 Z" fill="#d98c3f" ${S}/>
+  <circle cx="60" cy="27" r="9" fill="#d98c3f" ${S}/>
+  <circle cx="60" cy="27" r="4" fill="#f3ead8"/>
+  <path d="M40,34 L38,45 M51,31 L50,43 M30,42 L30,52" stroke="#2b2620" stroke-width="3.6" stroke-linecap="round"/>
+  <path d="M33,65 L41,63 M30,58 L38,57" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>
+  <text x="61" y="45" font-family="serif" font-size="13" fill="#2b2620" text-anchor="middle">王</text>
+  <path d="M66,49 L77,51" stroke="#2b2620" stroke-width="2.6" stroke-linecap="round"/>
+  <circle cx="72" cy="55" r="3.2" fill="#2b2620"/>
+  <ellipse cx="83" cy="61" rx="8.5" ry="6.5" fill="#f3ead8" ${S3}/>
+  <circle cx="87" cy="59" r="2.6" fill="#2b2620"/>
+  <path d="M83,64 C85,67 88,66 89,64" fill="none" stroke="#2b2620" stroke-width="2.2" stroke-linecap="round"/>`,
+
+usagi:`
+  <path d="M46,36 C40,14 50,7 55,17 C58,24 55,32 53,37 Z" fill="#f6efdf" ${S3}/>
+  <path d="M50,26 C49,20 52,17 53,22" fill="none" stroke="#d9a8a0" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M60,36 C60,13 71,9 73,20 C74,27 68,33 64,37 Z" fill="#f6efdf" ${S3}/>
+  <circle cx="27" cy="63" r="6" fill="#f6efdf" ${S3}/>
+  <path d="M28,62 C26,46 40,38 54,38 C68,38 78,46 80,56 C81,67 70,74 50,74 C34,74 30,70 28,62 Z" fill="#f6efdf" ${S}/>
+  <circle cx="66" cy="52" r="3" fill="#c73e2c"/>
+  <path d="M78,58 C80,60 78,63 75,62 M78,58 C76,61 73,61 72,59" fill="none" stroke="#2b2620" stroke-width="1.8" stroke-linecap="round"/>
+  <circle cx="70" cy="60" r="3.4" fill="#d9a8a0" opacity=".55"/>
+  <ellipse cx="44" cy="74" rx="7" ry="3.4" fill="#efe6d6" stroke="#2b2620" stroke-width="2.6"/>
+  <ellipse cx="62" cy="74" rx="7" ry="3.4" fill="#efe6d6" stroke="#2b2620" stroke-width="2.6"/>`,
+
+ryu:`
+  <path d="M14,72 a9,6 0 1,0 18,0 a8,5 0 1,0 16,2 a9,6 0 1,0 18,-1" fill="rgba(184,145,47,.35)" stroke="none"/>
+  <path d="M10,48 C22,58 38,56 46,44 C54,32 46,26 56,20 C64,15 76,18 80,28" fill="none" stroke="#5b7ea8" stroke-width="13" stroke-linecap="round"/>
+  <path d="M12,46 C22,54 36,52 43,42 C50,32 44,27 52,22" fill="none" stroke="#b8912f" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 7"/>
+  <path d="M18,42 L21,35 L26,42 M30,47 L34,40 L38,46 M44,36 L49,30 L52,37" fill="none" stroke="#c73e2c" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="80" cy="30" r="12.5" fill="#5b7ea8" ${S}/>
+  <path d="M88,22 C94,20 96,26 92,28 C96,30 94,36 90,34" fill="#5b7ea8" stroke="#2b2620" stroke-width="2.4"/>
+  <path d="M73,20 L68,9 M81,18 L82,7" stroke="#b8912f" stroke-width="3.8" stroke-linecap="round"/>
+  <path d="M70,26 C64,22 58,24 56,28 C60,29 64,31 67,34 Z" fill="#3a5a80"/>
+  <path d="M92,34 C99,32 102,37 100,42 M91,39 C97,41 98,47 94,48" fill="none" stroke="#c73e2c" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="83" cy="27" r="3" fill="#2b2620"/>
+  <path d="M90,30 L94,29" stroke="#2b2620" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M40,58 L36,66 M38,64 L33,64 M38,64 L40,69 M58,44 L62,52 M60,50 L65,49 M60,50 L58,55" fill="none" stroke="#5b7ea8" stroke-width="3.4" stroke-linecap="round"/>`,
+
+hebi:`
+  <ellipse cx="44" cy="65" rx="24" ry="9" fill="none" stroke="#7a9b5c" stroke-width="11"/>
+  <ellipse cx="44" cy="65" rx="24" ry="9" fill="none" stroke="#2b2620" stroke-width="1.6" stroke-dasharray="3 9"/>
+  <path d="M64,62 C72,58 72,46 64,40 C58,35 58,29 64,25" fill="none" stroke="#7a9b5c" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="67" cy="21" r="9.5" fill="#7a9b5c" ${S}/>
+  <circle cx="71" cy="19" r="2.6" fill="#2b2620"/>
+  <path d="M76,23 L84,25 M84,25 L88,22 M84,25 L87,28" stroke="#c73e2c" stroke-width="1.8" stroke-linecap="round"/>
+  <circle cx="34" cy="61" r="2" fill="#b8912f"/><circle cx="46" cy="70" r="2" fill="#b8912f"/><circle cx="58" cy="63" r="2" fill="#b8912f"/>`,
+
+uma:`
+  <path d="M18,52 C8,54 4,64 10,72 M23,52 C15,58 13,68 17,74" fill="none" stroke="#2b2620" stroke-width="4" stroke-linecap="round"/>
+  <path d="M16,62 C16,50 28,44 44,44 C56,44 64,48 68,54 C70,60 66,68 58,71 C46,75 22,74 17,68 Z" fill="#c9a06a" ${S}/>
+  <path d="M58,54 C60,40 64,28 74,22 L82,24 C88,28 90,34 86,38 C80,44 72,50 68,56 Z" fill="#c9a06a" ${S}/>
+  <path d="M74,22 C80,15 90,16 94,24 C97,29 95,34 89,35 C83,36 78,33 75,29 Z" fill="#c9a06a" ${S}/>
+  <path d="M58,52 C56,38 62,24 72,17 C75,21 71,26 70,31 C66,39 64,46 64,53 Z" fill="#2b2620"/>
+  <path d="M76,18 L74,9 L81,14 Z" fill="#c9a06a" ${S3}/>
+  <circle cx="82" cy="26" r="2.8" fill="#2b2620"/>
+  <circle cx="91" cy="29" r="1.8" fill="#2b2620"/>
+  <path d="M92,32 C90,34 87,34 86,32" fill="none" stroke="#2b2620" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M26,72 L21,82 M40,74 L38,84 M52,72 L56,82 M62,68 L69,77" stroke="#c9a06a" stroke-width="4.5" stroke-linecap="round"/>`,
+
+hitsuji:`
+  <path d="M24,58 a10,10 0 0,1 6,-16 a11,11 0 0,1 16,-8 a11,11 0 0,1 18,0 a10,10 0 0,1 14,10 a9,9 0 0,1 2,16 a10,10 0 0,1 -14,10 a12,12 0 0,1 -22,0 a10,10 0 0,1 -20,-12 Z" fill="#ece2cc" ${S}/>
+  <ellipse cx="76" cy="54" rx="10" ry="8.5" fill="#c9a98a" ${S3}/>
+  <path d="M66,44 a6,6 0 1,1 7,7" fill="none" stroke="#b8912f" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M84,48 C88,46 90,50 87,52" fill="none" stroke="#c9a98a" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="74" cy="53" r="2.6" fill="#2b2620"/>
+  <path d="M79,59 C81,61 84,60 84,58" fill="none" stroke="#2b2620" stroke-width="2" stroke-linecap="round"/>
+  <path d="M42,72 L42,80 M60,72 L60,80" stroke="#6b5a4c" stroke-width="4.5" stroke-linecap="round"/>`,
+
+saru:`
+  <path d="M40,74 C36,60 40,47 52,43 C64,39 76,45 78,57 C80,68 72,76 58,77 C48,78 42,77 40,74 Z" fill="#9c8872" ${S}/>
+  <path d="M72,58 C83,59 88,67 85,74" fill="none" stroke="#9c8872" stroke-width="6.5" stroke-linecap="round"/>
+  <ellipse cx="85" cy="76" rx="5.5" ry="3.2" fill="#d96a52" stroke="#2b2620" stroke-width="2.6"/>
+  <ellipse cx="52" cy="77" rx="11" ry="4" fill="#8a7561" stroke="#2b2620" stroke-width="2.6"/>
+  <circle cx="43" cy="70" r="4.5" fill="#d96a52" opacity=".5"/>
+  <circle cx="54" cy="28" r="14" fill="#9c8872" ${S}/>
+  <path d="M43,19 L39,14 M49,13 L47,7 M58,11 L58,5 M66,14 L70,9" stroke="#9c8872" stroke-width="2.6" stroke-linecap="round"/>
+  <circle cx="41" cy="28" r="4" fill="#d96a52" stroke="#2b2620" stroke-width="2.4"/>
+  <ellipse cx="59" cy="31" rx="9" ry="10" fill="#d96a52" ${S3}/>
+  <path d="M53,24 C55,22 58,22 59,24 M60,24 C62,22 65,22 66,24" fill="none" stroke="#2b2620" stroke-width="1.8" stroke-linecap="round"/>
+  <circle cx="56" cy="28" r="1.9" fill="#2b2620"/><circle cx="63" cy="28" r="1.9" fill="#2b2620"/>
+  <circle cx="58" cy="34" r="1.2" fill="#2b2620"/><circle cx="61" cy="34" r="1.2" fill="#2b2620"/>
+  <path d="M57,38 C59,40 61,40 63,38" fill="none" stroke="#2b2620" stroke-width="1.8" stroke-linecap="round"/>`,
+
+niwatori:`
+  <path d="M26,52 C14,44 12,32 22,30 M30,48 C20,38 22,26 32,28 M34,46 C28,34 32,24 40,28" fill="none" stroke="#4a6741" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M28,58 C28,42 44,34 58,35 C72,36 82,44 82,56 C82,68 70,75 52,75 C36,75 28,70 28,58 Z" fill="#f6efdf" ${S}/>
+  <path d="M44,52 C50,46 60,46 66,52" fill="none" stroke="#d9cdb4" stroke-width="3" stroke-linecap="round"/>
+  <path d="M60,36 C58,28 62,24 66,28 C66,22 72,20 74,26 C76,21 82,23 80,29 L74,36 Z" fill="#c73e2c" ${S3}/>
+  <circle cx="72" cy="46" r="3" fill="#2b2620"/>
+  <path d="M82,50 L92,53 L82,57 Z" fill="#b8912f" ${S3}/>
+  <circle cx="80" cy="60" r="4" fill="#c73e2c" stroke="#2b2620" stroke-width="2"/>
+  <path d="M46,75 L46,83 M62,75 L62,83" stroke="#b8912f" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M42,83 L50,83 M58,83 L66,83" stroke="#b8912f" stroke-width="2.6" stroke-linecap="round"/>`,
+
+inu:`
+  <path d="M30,42 a10,10 0 1,1 15,-6" fill="none" stroke="#d98c4f" stroke-width="7.5" stroke-linecap="round"/>
+  <path d="M34,39 a5,5 0 1,1 8,-3" fill="none" stroke="#f6efdf" stroke-width="3" stroke-linecap="round"/>
+  <path d="M26,60 C26,46 38,38 54,38 C68,38 80,45 82,55 C83,67 70,75 50,75 C34,75 26,70 26,60 Z" fill="#d98c4f" ${S}/>
+  <path d="M50,35 L48,20 L60,29 Z" fill="#d98c4f" ${S3}/>
+  <path d="M66,33 L74,19 L79,31 Z" fill="#d98c4f" ${S3}/>
+  <path d="M53,27 L52,31 M72,25 L71,29" stroke="#b5714f" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M58,46 C64,40 76,42 81,50 C84,56 82,62 76,65 C68,68 58,66 55,58 C54,53 55,49 58,46 Z" fill="#f6efdf"/>
+  <circle cx="64" cy="47" r="3" fill="#2b2620"/>
+  <circle cx="63" cy="40" r="2.2" fill="#f6efdf"/>
+  <circle cx="79" cy="53" r="2.8" fill="#2b2620"/>
+  <path d="M76,58 C78,61 82,61 83,58" fill="none" stroke="#2b2620" stroke-width="2" stroke-linecap="round"/>
+  <path d="M79,60 L80,64" stroke="#c73e2c" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M32,72 C33,63 42,60 48,64 C50,70 44,75 37,75 Z" fill="#f6efdf"/>
+  <ellipse cx="58" cy="75" rx="6" ry="3.2" fill="#f6efdf" stroke="#2b2620" stroke-width="2.4"/>`,
+
+inoshishi:`
+  <circle cx="16" cy="70" r="4" fill="#d9cdb4"/><circle cx="8" cy="64" r="3" fill="#d9cdb4"/>
+  <path d="M20,60 C20,42 40,33 58,34 C74,35 86,44 88,56 C89,66 78,74 52,74 C32,74 20,70 20,60 Z" fill="#6b5544" ${S}/>
+  <path d="M30,38 L36,32 L42,37 L48,31 L54,36 L60,31 L66,36" fill="none" stroke="#2b2620" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M44,48 C50,44 60,44 66,48" fill="none" stroke="#8a7364" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="70" cy="48" r="2.8" fill="#2b2620"/>
+  <path d="M62,42 L72,44" stroke="#2b2620" stroke-width="2.4" stroke-linecap="round"/>
+  <ellipse cx="85" cy="58" rx="8.5" ry="6.5" fill="#4f3e32" ${S3}/>
+  <circle cx="83" cy="57" r="1.6" fill="#2b2620"/><circle cx="88" cy="57" r="1.6" fill="#2b2620"/>
+  <path d="M78,63 L74,55" stroke="#efe6d6" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M32,74 L26,82 M52,74 L48,82 M70,73 L76,81" stroke="#6b5544" stroke-width="5" stroke-linecap="round"/>`,
+
+/* ===== 化け猫の軍勢(敵) ===== */
+bake: catTail("#4a4440")+catBody("#4a4440")+catEyesGold()+catMouth()+`
+  <line x1="40" y1="58" x2="30" y2="56" stroke="#2b2620" stroke-width="1.5"/>
+  <line x1="82" y1="58" x2="92" y2="56" stroke="#2b2620" stroke-width="1.5"/>`,
+
+kobake: catTail("#6a635a")+catBody("#6a635a")+`
+  <circle cx="52" cy="52" r="5" fill="#b8912f"/><circle cx="70" cy="52" r="5" fill="#b8912f"/>
+  <circle cx="52" cy="52" r="2" fill="#2b2620"/><circle cx="70" cy="52" r="2" fill="#2b2620"/>
+  <path d="M58,62 C60,65 64,65 66,62" fill="none" stroke="#c73e2c" stroke-width="2.2" stroke-linecap="round"/>`,
+
+kaze: `
+  <path d="M20,44 C10,44 10,36 18,36 M24,58 C12,58 12,50 20,50 M22,70 C14,70 14,64 20,64" fill="none" stroke="#4a6fa5" stroke-width="2.4" stroke-linecap="round"/>`
+  +catTail("#8a8378")+catBody("#8a8378")+`
+  <path d="M46,51 L58,53 M64,53 L76,51" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>
+  <path d="M58,63 C60,65 64,65 66,63" fill="none" stroke="#c73e2c" stroke-width="2.2" stroke-linecap="round"/>`,
+
+tate: catTail("#4a4440")+catBody("#4a4440")+catEyesGold()+`
+  <rect x="66" y="32" rx="7" width="26" height="46" fill="#d9cdb4" ${S3}/>
+  <rect x="72" y="38" rx="4" width="14" height="34" fill="none" stroke="#8a7f6a" stroke-width="2"/>
+  <circle cx="79" cy="55" r="5" fill="#c73e2c"/>`,
+
+nage: catTail("#5c554e")+catBody("#5c554e")+catEyesGold()+catMouth()+`
+  <circle cx="76" cy="24" r="9" fill="#9c948a" ${S3}/>
+  <path d="M68,40 C70,34 72,30 76,30" fill="none" stroke="#5c554e" stroke-width="5" stroke-linecap="round"/>`,
+
+oni: catTail("#7a3a2c")+catBody("#7a3a2c")+`
+  <path d="M44,32 L42,20 M72,30 L76,19" stroke="#b8912f" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M44,48 L56,52 M66,52 L78,48" stroke="#2b2620" stroke-width="3.2" stroke-linecap="round"/>
+  <circle cx="53" cy="55" r="2.8" fill="#b8912f"/><circle cx="70" cy="55" r="2.8" fill="#b8912f"/>
+  <path d="M56,64 C60,68 64,68 68,64" fill="none" stroke="#c73e2c" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M60,65 L60,60 M66,65 L66,61" stroke="#f3ead8" stroke-width="2.2" stroke-linecap="round"/>`,
+
+kuro: catTail("#33302b")+catBody("#33302b")+catEyesGold()+catMouth()+`
+  <path d="M38,38 C40,26 56,20 66,22 C76,24 82,32 80,40 C68,32 50,32 38,38 Z" fill="#6b5d52" ${S3}/>
+  <path d="M56,22 C52,12 60,8 62,16 M62,21 C64,10 72,10 70,19" fill="none" stroke="#b8912f" stroke-width="3.4" stroke-linecap="round"/>
+  <circle cx="59" cy="27" r="3.5" fill="#c73e2c"/>`,
+
+nekomata:`
+  <path d="M30,70 C14,76 8,62 18,56" fill="none" stroke="#3a3430" stroke-width="6" stroke-linecap="round"/>
+  <path d="M36,72 C22,80 12,70 20,62" fill="none" stroke="#3a3430" stroke-width="6" stroke-linecap="round"/>
+  <path d="M18,54 C16,50 20,48 22,50 M18,60 C15,58 16,54 19,54" fill="none" stroke="#4a6fa5" stroke-width="2" stroke-linecap="round"/>
+  <path d="M28,60 C26,42 40,32 56,32 C72,32 84,42 84,56 C84,70 70,76 55,76 C40,76 30,72 28,60 Z" fill="#3a3430" ${S}/>
+  <path d="M40,36 L36,22 L50,30 Z" fill="#3a3430" ${S3}/>
+  <path d="M66,33 L74,20 L80,32 Z" fill="#3a3430" ${S3}/>
+  <path d="M42,25 L45,29 M73,24 L72,29" stroke="#c73e2c" stroke-width="2" stroke-linecap="round"/>
+  <ellipse cx="52" cy="50" rx="5.5" ry="7" fill="#b8912f"/>
+  <ellipse cx="72" cy="50" rx="5.5" ry="7" fill="#b8912f"/>
+  <path d="M52,44 L52,56 M72,44 L72,56" stroke="#2b2620" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M58,62 C60,66 66,66 68,62" fill="none" stroke="#c73e2c" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M60,62 L58,66 M64,63 L64,67 M68,62 L70,66" stroke="#f3ead8" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M90,28 C96,20 92,12 86,12 C88,17 84,20 82,24 C81,28 85,32 90,28 Z" fill="#4a6fa5" opacity=".85" stroke="#2b2620" stroke-width="2"/>
+  <circle cx="87" cy="20" r="2.4" fill="#f3ead8"/>`,
+};
+
+
+exp.CHARS=CHARS;
+
+})(typeof module!=="undefined"&&module.exports?module.exports:(window.EtoAssets={}));
+
+/* ===== src/core.js ===== */
+/* ============================================================
+   干支合戦絵巻 - core.js
+   純粋ゲームロジック層。DOM・Canvas・Audioへの依存ゼロ。
+   演出が必要な出来事は events 配列に積み、外側(render/ui)が消費する。
+   Node(シミュレータ)とブラウザで同一コードが動く = Single Source of Truth。
+   ============================================================ */
+(function(exp){
+"use strict";
+
+function createGame(opts){
+  const D = opts.data;
+  const C = D.CONST;
+  const rng = opts.rng || Math.random;
+  const stageIdx = opts.stage || 0;
+  const st = D.STAGES[stageIdx];
+
+  const g = {
+    stageIdx, st,
+    t: 0,
+    money: st.startMoney || C.START_MONEY,
+    moneyMax: C.MONEY_MAX0,
+    wLv: 1,
+    upCost: C.UP_COST0,
+    allyBaseHp: C.ALLY_BASE_HP,
+    foeBaseHp: st.castleHp,
+    allies: [], foes: [],
+    cds: D.UNITS.map(()=>0),
+    spawnTimer: 5,
+    bossSpawned: false,
+    over: false, won: false,
+    lastZi: -99, chain: 0,
+    prevToki: -1,
+    events: [],
+  };
+
+  function emit(e){ g.events.push(e); }
+
+  /* ---------- バフ計算 ---------- */
+  g.tokiIdx = function(){ return Math.floor(g.t / C.TOKI_LEN) % 12; };
+
+  g.trineActive = function(){
+    const cnt=[0,0,0,0];
+    for(const a of g.allies) cnt[a.zi%4]++;
+    return cnt.map(c=>c>=2);
+  };
+
+  function atkOf(e){
+    if(e.side!=="ally") return e.atk;
+    let m = e.comboMult || 1;
+    if(g.trineActive()[e.zi%4]) m *= C.TRINE_MUL;
+    if(e.zi === g.tokiIdx()) m *= C.TOKI_ATK_MUL;
+    return Math.round(e.atk * m);
+  }
+  function spdOf(e){
+    if(e.side==="ally" && e.zi===g.tokiIdx()) return e.spd * C.TOKI_SPD_MUL;
+    return e.spd;
+  }
+
+  /* ---------- エンティティ ---------- */
+  function makeUnit(def, side, comboMult){
+    const dir = side==="ally" ? 1 : -1;
+    return Object.assign({}, def, {
+      side, dir,
+      x: side==="ally" ? C.ALLY_BASE_X+22 : C.FOE_BASE_X-22,
+      maxHp: def.hp, hp: def.hp,
+      atkTimer: 0, atkAnim: 0,
+      wob: rng()*Math.PI*2,
+      yOff: (rng()*14)-7,
+      kbStep: def.hp/def.kb, kbCount: 0, kbT: 0,
+      comboMult: comboMult||1,
+    });
+  }
+
+  function damage(o, amt){
+    o.hp -= amt;
+    emit({type:"damage", x:o.x, y:C.GROUND-o.size*2-14+o.yOff, amt, side:o.side});
+    const stepIdx = Math.floor((o.maxHp-o.hp)/o.kbStep);
+    if(stepIdx > o.kbCount && o.hp > 0){
+      o.kbCount = stepIdx;
+      o.kbT = C.KB_TIME;
+    }
+  }
+
+  function targetOf(e){
+    const opp = e.side==="ally" ? g.foes : g.allies;
+    let best=null, bd=1e9;
+    for(const o of opp){
+      const d = e.dir>0 ? o.x-e.x : e.x-o.x;
+      if(d>=-10 && d<bd){bd=d;best=o;}
+    }
+    const baseX = e.side==="ally" ? C.FOE_BASE_X : C.ALLY_BASE_X;
+    const dBase = e.dir>0 ? baseX-e.x : e.x-baseX;
+    if(dBase<bd){bd=dBase;best="base";}
+    return {best,dist:bd};
+  }
+
+  /* ---------- プレイヤー操作 ---------- */
+  g.summon = function(i){
+    const u = D.UNITS[i];
+    if(g.over || g.cds[i]>0 || g.money<u.cost) return false;
+    g.money -= u.cost;
+    g.cds[i] = u.cd;
+    let mult = 1, comboed = false, prevZi = g.lastZi;
+    if(u.zi === (g.lastZi+1)%12 && g.lastZi >= 0){
+      g.chain++;
+      mult = C.COMBO_BASE + C.COMBO_PER_CHAIN * Math.min(g.chain, C.COMBO_CHAIN_CAP);
+      comboed = true;
+    }else{
+      g.chain = 0;
+    }
+    g.lastZi = u.zi;
+    g.allies.push(makeUnit(u, "ally", mult));
+    emit({type:"summon", x:C.ALLY_BASE_X+22, y:C.GROUND-14,
+          combo:comboed, chain:g.chain, prevZi, zi:u.zi});
+    return true;
+  };
+
+  g.upgrade = function(){
+    if(g.over || g.money < g.upCost) return false;
+    g.money -= g.upCost;
+    g.wLv++;
+    g.moneyMax += C.MONEY_CAP_UP;
+    g.upCost = Math.floor(g.upCost * C.UP_COST_MUL);
+    emit({type:"upgrade", lv:g.wLv});
+    return true;
+  };
+
+  /* ---------- 進行 ---------- */
+  function end(win){
+    g.over = true; g.won = win;
+    emit({type:"end", win});
+  }
+
+  g.step = function(dt){
+    if(g.over) return;
+    g.t += dt;
+
+    // 刻の切り替わり
+    const tk = g.tokiIdx();
+    if(tk !== g.prevToki){
+      if(g.prevToki >= 0) emit({type:"toki", idx:tk});
+      g.prevToki = tk;
+    }
+
+    // 気の収入・クールダウン
+    g.money = Math.min(g.moneyMax, g.money + (C.INCOME_BASE + C.INCOME_PER_LV*g.wLv)*dt);
+    for(let i=0;i<g.cds.length;i++) g.cds[i]=Math.max(0,g.cds[i]-dt);
+
+    // 敵スポーン
+    g.spawnTimer -= dt;
+    if(g.spawnTimer <= 0){
+      const pool = st.pool(g.t);
+      const key = pool[Math.floor(rng()*pool.length)];
+      g.foes.push(makeUnit(D.CATS[key], "foe"));
+      g.spawnTimer = st.pace(g.t) * (g.bossSpawned ? C.BOSS_PACE_MUL : 1);
+    }
+    // ボス出現
+    if(!g.bossSpawned && g.foeBaseHp < st.castleHp*st.bossAt){
+      g.foes.push(makeUnit(D.CATS[st.bossKey], "foe"));
+      if(st.escort) g.foes.push(makeUnit(D.CATS[st.escort], "foe"));
+      g.bossSpawned = true;
+      emit({type:"boss", name:D.CATS[st.bossKey].name, hint:st.bossHint||""});
+    }
+
+    // 戦闘
+    for(const arr of [g.allies, g.foes]){
+      for(const e of arr){
+        e.wob += dt*8;
+        e.atkTimer = Math.max(0, e.atkTimer-dt);
+        e.atkAnim = Math.max(0, e.atkAnim-dt);
+        if(e.kbT > 0){
+          e.kbT -= dt;
+          e.x -= e.dir * C.KB_SPEED * dt;
+          const min = e.side==="ally" ? C.ALLY_BASE_X+10 : C.ALLY_BASE_X;
+          const max = e.side==="ally" ? C.FOE_BASE_X : C.FOE_BASE_X-10;
+          e.x = Math.max(min, Math.min(max, e.x));
+          continue;
+        }
+        const {best, dist} = targetOf(e);
+        if(dist <= e.range){
+          if(e.atkTimer === 0){
+            e.atkTimer = e.atkInt || 1.0;
+            e.atkAnim = 0.22;
+            const power = atkOf(e);
+            if(best === "base"){
+              if(e.side==="ally") g.foeBaseHp -= power; else g.allyBaseHp -= power;
+            }else if(e.area){
+              const opp = e.side==="ally" ? g.foes : g.allies;
+              for(const o of opp){
+                const d = e.dir>0 ? o.x-e.x : e.x-o.x;
+                if(d>=-10 && d<=e.range+14) damage(o, power);
+              }
+            }else{
+              damage(best, power);
+            }
+          }
+        }else{
+          e.x += e.dir * spdOf(e) * dt;
+        }
+      }
+    }
+
+    // 撃破・掃除
+    g.foes = g.foes.filter(f=>{
+      if(f.hp<=0){
+        g.money = Math.min(g.moneyMax, g.money+f.bounty);
+        emit({type:"kill", x:f.x, size:f.size, bounty:f.bounty});
+        return false;
+      }
+      return true;
+    });
+    g.allies = g.allies.filter(a=>a.hp>0);
+
+    if(g.foeBaseHp<=0) end(true);
+    else if(g.allyBaseHp<=0) end(false);
+  };
+
+  return g;
+}
+
+exp.createGame = createGame;
+
+})(typeof module!=="undefined"&&module.exports?module.exports:(window.EtoCore={}));
+
+/* ===== src/platform.js ===== */
+/* ============================================================
+   干支合戦絵巻 - platform.js
+   プラットフォーム依存層(Web実装)。
+   将来Capacitor移行時は、このファイルの実装だけを
+   ネイティブプラグイン(音・保存・広告・IAP)に差し替える。
+   core/render/main は一切変更しない。
+   ============================================================ */
+(function(exp){
+"use strict";
+
+/* ---------- 音(WebAudio 小型シンセ) ---------- */
+let AC=null, sndOn=true;
+function ac(){
+  if(!AC){ AC = new (window.AudioContext||window.webkitAudioContext)(); }
+  if(AC.state==="suspended") AC.resume();
+  return AC;
+}
+function tone(freq,dur,type,vol,delay){
+  if(!sndOn) return;
+  try{
+    const a=ac(), o=a.createOscillator(), g=a.createGain();
+    o.type=type||"sine"; o.frequency.value=freq;
+    g.gain.setValueAtTime(vol||0.12, a.currentTime+(delay||0));
+    g.gain.exponentialRampToValueAtTime(0.001, a.currentTime+(delay||0)+dur);
+    o.connect(g); g.connect(a.destination);
+    o.start(a.currentTime+(delay||0)); o.stop(a.currentTime+(delay||0)+dur);
+  }catch(e){}
+}
+
+const SFX = {
+  summon:()=>tone(320,0.08,"square",0.06),
+  combo:(c)=>{const m=1+0.12*Math.min(c||1,5);tone(660*m,0.1,"sine",0.1);tone(880*m,0.14,"sine",0.1,0.08);tone(1100*m,0.16,"sine",0.07,0.16);},
+  toki:()=>{tone(1320,0.5,"sine",0.08);tone(1980,0.35,"sine",0.04,0.02);},
+  boss:()=>{tone(70,0.4,"sawtooth",0.16);tone(55,0.5,"sawtooth",0.14,0.15);},
+  coin:()=>tone(1200,0.06,"square",0.05),
+  win:()=>{tone(523,0.15,"sine",0.1);tone(659,0.15,"sine",0.1,0.12);tone(784,0.3,"sine",0.1,0.24);},
+  lose:()=>{tone(220,0.3,"sawtooth",0.1);tone(165,0.5,"sawtooth",0.1,0.2);},
+};
+
+exp.SFX = SFX;
+exp.setSound = function(on){ sndOn = on; };
+exp.getSound = function(){ return sndOn; };
+
+/* ---------- 保存(将来用スタブ) ---------- */
+/* 注意:claude.aiプレビューではlocalStorage不可のためメモリ実装。
+   Capacitor移行時にPreferences APIへ差し替える。 */
+const mem = {};
+exp.save = function(key, val){ mem[key]=JSON.stringify(val); };
+exp.load = function(key, def){ return mem[key]!==undefined ? JSON.parse(mem[key]) : def; };
+
+/* ---------- 広告・IAP(将来用スタブ) ---------- */
+exp.showRewardAd = function(cb){ cb(false); }; // 未実装:常に失敗を返す
+exp.purchase = function(id, cb){ cb(false); };
+
+})(typeof module!=="undefined"&&module.exports?module.exports:(window.EtoPlatform={}));
+
+/* ===== src/render.js ===== */
+/* ============================================================
+   干支合戦絵巻 - render.js
+   Canvas描画層。coreのstateを読み、eventsからエフェクトを生成する。
+   ゲームルールには一切関与しない(coreを変えずに演出だけ差し替え可能)。
+   ============================================================ */
+(function(exp){
+"use strict";
+
+function createRenderer(canvas, data, assets){
+  const C = data.CONST;
+  const ctx = canvas.getContext("2d");
+  canvas.width = C.W; canvas.height = C.H;
+
+  /* SVG→Image化 */
+  const IMGS = {};
+  for(const k in assets.CHARS){
+    const img = new Image();
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 90">${assets.CHARS[k]}</svg>`);
+    IMGS[k] = img;
+  }
+
+  /* エフェクト状態(描画層に閉じる) */
+  let parts=[], rings=[], pops=[];
+  let shakeT=0, tokiFlash=0;
+
+  function burst(x,y,color,n,pow){
+    for(let i=0;i<(n||8);i++){
+      const a=Math.random()*Math.PI*2, v=(0.4+Math.random()*0.6)*(pow||80);
+      parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-40,t:0.5+Math.random()*0.3,color,r:2+Math.random()*2.5});
+    }
+  }
+
+  /* coreイベント→エフェクト変換 */
+  function onEvent(ev, g){
+    switch(ev.type){
+      case "summon":
+        if(ev.combo){
+          burst(ev.x, ev.y, "#b8912f", 16, 120);
+          rings.push({x:ev.x,y:ev.y,r:6,max:60+10*Math.min(ev.chain,4),t:0.55,color:"#b8912f"});
+          rings.push({x:ev.x,y:ev.y,r:2,max:40,t:0.4,color:"#c73e2c"});
+          pops.push({x:ev.x,y:ev.y-34,txt:data.ZODIAC[ev.prevZi]+"→"+data.ZODIAC[ev.zi],t:1.1,kanji:true});
+          shakeT=Math.max(shakeT,0.12+0.03*Math.min(ev.chain,4));
+        }else{
+          burst(ev.x, ev.y, "#d9cdb4", 6, 55);
+        }
+        break;
+      case "damage":
+        pops.push({x:ev.x,y:ev.y,txt:ev.amt,t:0.7,foe:ev.side==="foe"});
+        break;
+      case "kill":
+        pops.push({x:ev.x,y:C.GROUND-ev.size*2-24,txt:"+"+ev.bounty+"氣",t:0.9,gold:true});
+        burst(ev.x, C.GROUND-ev.size-8, "#c73e2c", 6, 60);
+        break;
+      case "boss":
+        shakeT=0.7;
+        break;
+      case "toki":
+        tokiFlash=0.8;
+        break;
+    }
+  }
+
+  function update(dt, g){
+    shakeT=Math.max(0,shakeT-dt);
+    tokiFlash=Math.max(0,tokiFlash-dt);
+    parts=parts.filter(p=>{p.t-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=160*dt;return p.t>0;});
+    rings=rings.filter(r=>{r.t-=dt;r.r+=(r.max-r.r)*dt*9;return r.t>0;});
+    pops=pops.filter(p=>{p.t-=dt;p.y-=22*dt;return p.t>0;});
+    // 連携中ユニットの気の粒
+    for(const a of g.allies){
+      if(a.comboMult>1 && Math.random()<dt*3){
+        parts.push({x:a.x+(Math.random()*20-10),y:C.GROUND-14-Math.random()*a.size*2,vx:0,vy:-30,t:0.5,color:"#b8912f",r:1.6});
+      }
+    }
+  }
+
+  function drawKasumi(x,y,w){
+    ctx.fillStyle="rgba(184,145,47,.14)";
+    ctx.beginPath();
+    ctx.ellipse(x,y,w,14,0,0,Math.PI*2);
+    ctx.ellipse(x+w*0.7,y+8,w*0.7,11,0,0,Math.PI*2);
+    ctx.ellipse(x-w*0.6,y+6,w*0.5,9,0,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawChar(e, g){
+    const bob=Math.sin(e.wob)*2;
+    const shake=e.kbT>0?Math.sin(e.kbT*60)*2:0;
+    const y=C.GROUND-8+e.yOff;
+    const trines=g.trineActive(), tk=g.tokiIdx();
+    if(e.side==="ally"&&trines[e.zi%4]){
+      ctx.strokeStyle=data.TRINE_COLORS[e.zi%4];
+      ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.ellipse(e.x,y+4,e.size+4,5,0,0,Math.PI*2);
+      ctx.stroke();
+    }
+    if(e.side==="ally"&&e.zi===tk){
+      ctx.fillStyle="rgba(184,145,47,.25)";
+      ctx.beginPath();
+      ctx.ellipse(e.x,y-e.size,e.size+6,e.size+8,0,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.save();
+    ctx.translate(e.x,y+bob+shake);
+    ctx.rotate(Math.sin(e.wob)*0.06);
+    if(e.side==="foe"){ctx.scale(-1,1);}
+    if(e.atkAnim>0){
+      ctx.translate(Math.sin((0.22-e.atkAnim)/0.22*Math.PI)*7,0);
+    }
+    ctx.globalAlpha=e.kbT>0?0.7:1;
+    const img=IMGS[e.svg];
+    if(img&&img.complete&&img.naturalWidth>0){
+      const h=e.size*2.6, w=h*(100/90);
+      ctx.drawImage(img,-w/2,-h+10,w,h);
+    }else{
+      ctx.font=e.size*2+"px serif";
+      ctx.textAlign="center";
+      ctx.fillText(e.emoji,0,0);
+    }
+    ctx.restore();
+    if(e.side==="ally"&&e.comboMult>1){
+      ctx.fillStyle="#b8912f";
+      ctx.beginPath();ctx.arc(e.x+e.size*0.9,y-e.size*2-12,7,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="#f3ead8";
+      ctx.font="9px 'Yuji Syuku',serif";
+      ctx.textAlign="center";
+      ctx.fillText("連",e.x+e.size*0.9,y-e.size*2-9);
+    }
+    const w=e.size*2, r=e.hp/e.maxHp;
+    ctx.fillStyle="rgba(43,38,32,.3)";
+    ctx.fillRect(e.x-w/2,y-e.size*2-6,w,4);
+    ctx.fillStyle=e.side==="ally"?"#4a6741":"#c73e2c";
+    ctx.fillRect(e.x-w/2,y-e.size*2-6,w*Math.max(0,r),4);
+  }
+
+  function draw(g){
+    ctx.clearRect(0,0,C.W,C.H);
+    ctx.save();
+    if(shakeT>0){
+      ctx.translate((Math.random()-0.5)*shakeT*18,(Math.random()-0.5)*shakeT*12);
+    }
+    if(tokiFlash>0){
+      ctx.fillStyle=`rgba(184,145,47,${tokiFlash*0.22})`;
+      ctx.fillRect(0,0,C.W,C.H);
+    }
+    drawKasumi(120,26,90);
+    drawKasumi(760,34,110);
+    drawKasumi(430,18,70);
+    ctx.fillStyle="rgba(74,103,65,.12)";
+    ctx.beginPath();ctx.ellipse(200,C.GROUND-8,180,52,0,Math.PI,0);ctx.fill();
+    ctx.beginPath();ctx.ellipse(650,C.GROUND-8,220,64,0,Math.PI,0);ctx.fill();
+    ctx.fillStyle="rgba(184,145,47,.10)";
+    ctx.beginPath();ctx.ellipse(430,C.GROUND-4,140,36,0,Math.PI,0);ctx.fill();
+    ctx.fillStyle="rgba(43,38,32,.85)";
+    ctx.fillRect(0,C.GROUND,C.W,3);
+    ctx.fillStyle="rgba(43,38,32,.06)";
+    ctx.fillRect(0,C.GROUND+3,C.W,C.H-C.GROUND);
+
+    ctx.font="40px serif"; ctx.textAlign="center";
+    ctx.fillText("⛩️", C.ALLY_BASE_X, C.GROUND-6);
+    ctx.fillText("🏯", C.FOE_BASE_X, C.GROUND-6);
+
+    for(const e of [...g.allies, ...g.foes]) drawChar(e, g);
+
+    for(const r of rings){
+      ctx.globalAlpha=Math.min(1,r.t/0.25);
+      ctx.strokeStyle=r.color;
+      ctx.lineWidth=3;
+      ctx.beginPath();
+      ctx.ellipse(r.x,r.y,r.r,r.r*0.4,0,0,Math.PI*2);
+      ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+
+    for(const p of parts){
+      ctx.globalAlpha=Math.min(1,p.t/0.3);
+      ctx.fillStyle=p.color;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    ctx.textAlign="center";
+    for(const p of pops){
+      ctx.globalAlpha=Math.min(1,p.t/0.3);
+      if(p.kanji){
+        ctx.font="26px 'Yuji Syuku',serif";
+        ctx.fillStyle="#c73e2c";
+      }else{
+        ctx.font="bold 13px 'Zen Maru Gothic',sans-serif";
+        ctx.fillStyle=p.gold?"#b8912f":(p.foe?"#c73e2c":"#4a6741");
+      }
+      ctx.fillText(p.txt,p.x,p.y);
+    }
+    ctx.globalAlpha=1;
+    ctx.restore();
+  }
+
+  function reset(){
+    parts=[]; rings=[]; pops=[]; shakeT=0; tokiFlash=0;
+  }
+
+  return { onEvent, update, draw, reset };
+}
+
+exp.createRenderer = createRenderer;
+
+})(typeof module!=="undefined"&&module.exports?module.exports:(window.EtoRender={}));
+
+/* ===== src/main.js ===== */
+/* ============================================================
+   干支合戦絵巻 - main.js
+   UI配線層。DOM構築・入力・HUD更新・ゲームループを担当し、
+   coreのイベントを renderer / platform(SFX) / DOM演出 に振り分ける。
+   ============================================================ */
+(function(){
+"use strict";
+
+const D = window.EtoData;
+const Core = window.EtoCore;
+const Platform = window.EtoPlatform;
+const Assets = window.EtoAssets;
+const C = D.CONST;
+
+/* SVG defsをDOMに注入(デッキカード用) */
+(function(){
+  const host=document.createElement("div");
+  host.innerHTML='<svg width="0" height="0" style="position:absolute"><defs>'+
+    Object.entries(Assets.CHARS).map(([k,v])=>`<g id="g-${k}">${v}</g>`).join("")+
+    '</defs></svg>';
+  document.body.insertBefore(host, document.body.firstChild);
+})();
+
+const $ = id=>document.getElementById(id);
+let stage=0, game=null, speed=1;
+const renderer = window.EtoRender.createRenderer($("cv"), D, Assets);
+
+/* ---------- DOM演出 ---------- */
+let bannerT;
+function showBanner(txt){
+  const b=$("banner");
+  b.textContent=txt;
+  b.style.opacity=1;
+  clearTimeout(bannerT);
+  bannerT=setTimeout(()=>b.style.opacity=0,1800);
+}
+function showRenkei(prevZ, curZ, ch){
+  $("rkPair").textContent=D.ZODIAC[prevZ]+" ➤ "+D.ZODIAC[curZ];
+  $("rkCnt").textContent="順番連携 "+["","","二","三","四","五","六","七","八"][Math.min(ch+1,8)]+"連!";
+  const rk=$("renkei");
+  rk.classList.remove("on");
+  void rk.offsetWidth;
+  rk.classList.add("on");
+}
+
+/* ---------- coreイベントの振り分け ---------- */
+function dispatch(ev){
+  renderer.onEvent(ev, game);
+  switch(ev.type){
+    case "summon":
+      if(ev.combo){ showRenkei(ev.prevZi, ev.zi, ev.chain); Platform.SFX.combo(ev.chain); }
+      else Platform.SFX.summon();
+      break;
+    case "kill": Platform.SFX.coin(); break;
+    case "toki": Platform.SFX.toki(); break;
+    case "boss":
+      Platform.SFX.boss();
+      showBanner("⚠ "+ev.name+" 出撃"+(ev.hint?" ─ "+ev.hint:"")+" ⚠");
+      break;
+    case "end": onEnd(ev.win); break;
+  }
+}
+
+/* ---------- ステージ管理 ---------- */
+function resetStage(){
+  game = Core.createGame({stage, data:D});
+  renderer.reset();
+  $("overlay").style.display="none";
+  $("renkei").classList.remove("on");
+  const st=D.STAGES[stage];
+  $("stNum").textContent=st.kanji;
+  $("stName").textContent=st.name;
+  $("foeName").textContent=st.castle;
+  showBanner("第"+st.kanji+"幕 開演");
+  syncStSel();
+  syncHud();
+}
+
+function onEnd(win){
+  if(win)Platform.SFX.win();else Platform.SFX.lose();
+  const st=D.STAGES[stage];
+  const final = win && stage===D.STAGES.length-1;
+  $("ovTitle").textContent = final?"完全勝利":win?"勝 利":"敗 北";
+  $("ovTitle").style.color = win?"#4a6741":"#c73e2c";
+  $("ovMsg").textContent = win ? st.winMsg
+    : "社は焼け落ちた。化け猫が十三番目の椅子に座る……\n順番連携・三合・刻を使いこなし、再戦せよ。";
+  $("nextBtn").style.display = win && !final ? "" : "none";
+  $("retryBtn").textContent = final ? "第一幕から再演" : win ? "この幕をもう一度" : "この幕をやり直す";
+  if(final){stage=0;}
+  $("overlay").style.display="flex";
+}
+
+/* ---------- HUD ---------- */
+function syncHud(){
+  const g=game;
+  $("money").textContent=Math.floor(g.money);
+  $("moneyMax").textContent=g.moneyMax;
+  $("wLv").textContent=g.wLv;
+  $("upCost").textContent=g.upCost;
+  $("upBtn").disabled = g.money<g.upCost || g.over;
+  $("allyHp").style.width=(100*Math.max(0,g.allyBaseHp)/C.ALLY_BASE_HP)+"%";
+  $("foeHp").style.width=(100*Math.max(0,g.foeBaseHp)/D.STAGES[stage].castleHp)+"%";
+  $("allyHpTxt").textContent=Math.max(0,Math.ceil(g.allyBaseHp));
+  $("foeHpTxt").textContent=Math.max(0,Math.ceil(g.foeBaseHp));
+  const tk=g.tokiIdx();
+  $("tokiName").textContent=D.ZODIAC[tk]+"の刻";
+  $("tokiEmoji").textContent=D.ZEMOJI[tk];
+  $("tokiBar").style.width=(100*(g.t%C.TOKI_LEN)/C.TOKI_LEN)+"%";
+  const nextZi=(g.lastZi+1)%12;
+  if(g.lastZi>=0){
+    $("nextZi").textContent=D.ZODIAC[nextZi];
+    const nu=D.UNITS.find(u=>u.zi===nextZi);
+    $("chainMsg").textContent=nu?nu.name+"を出すと連携継続!":"";
+    $("chainCnt").textContent=g.chain>0?g.chain+"連鎖中":"";
+  }else{
+    $("nextZi").textContent="子";
+    $("chainMsg").textContent="十二支の順(子→丑→…)で召喚すると連携!";
+    $("chainCnt").textContent="";
+  }
+  D.UNITS.forEach((u,i)=>{
+    const card=deckCards[i];
+    card.classList.toggle("poor", g.money<u.cost);
+    card.classList.toggle("toki", u.zi===tk);
+    card.classList.toggle("next", g.lastZi>=0 && u.zi===nextZi && u.zi!==tk);
+    card.querySelector(".cd").style.transform=`scaleY(${g.cds[i]/u.cd})`;
+  });
+}
+
+/* ---------- デッキ構築 ---------- */
+const deckEl=$("deck"), deckCards=[];
+D.UNITS.forEach((u,i)=>{
+  const c=document.createElement("div");
+  c.className="card";
+  c.innerHTML=`<span class="trine" style="background:${D.TRINE_COLORS[u.zi%4]}"></span>
+    <svg class="csvg" viewBox="0 0 100 90"><use href="#g-${u.svg}"/></svg>
+    <span class="nm">${u.name}<span style="font-weight:500;color:#b8912f">・${D.ZODIAC[u.zi]}</span></span>
+    <span class="rl">${u.role}</span>
+    <span class="cost">氣${u.cost}</span><div class="cd"></div>`;
+  c.addEventListener("pointerdown",()=>{
+    if(game.summon(i)) syncHud();
+  });
+  deckEl.appendChild(c); deckCards.push(c);
+});
+
+/* ---------- ボタン ---------- */
+$("upBtn").addEventListener("pointerdown",()=>{ if(game.upgrade()) syncHud(); });
+$("sndBtn").addEventListener("pointerdown",()=>{
+  Platform.setSound(!Platform.getSound());
+  $("sndBtn").textContent=Platform.getSound()?"🔊":"🔇";
+  if(Platform.getSound())Platform.SFX.summon();
+});
+$("speedBtn").addEventListener("pointerdown",()=>{
+  speed = speed===1?2:1;
+  $("speedBtn").textContent="⏩ x"+speed;
+});
+$("retryBtn").addEventListener("pointerdown",resetStage);
+$("nextBtn").addEventListener("pointerdown",()=>{
+  if(game.won && stage<D.STAGES.length-1){stage++;}
+  resetStage();
+});
+document.querySelectorAll(".stSel").forEach(b=>{
+  b.addEventListener("pointerdown",()=>{
+    stage=parseInt(b.dataset.st);
+    resetStage();
+  });
+});
+function syncStSel(){
+  document.querySelectorAll(".stSel").forEach(b=>{
+    const on=parseInt(b.dataset.st)===stage;
+    b.style.background=on?"var(--shu)":"var(--washi)";
+    b.style.color=on?"var(--washi)":"var(--sumi)";
+  });
+}
+
+/* ---------- ゲームループ ---------- */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(0.05,(now-last)/1000);
+  last=now;
+  const sdt=dt*speed;
+  game.step(sdt);
+  const evs=game.events.splice(0);
+  for(const ev of evs) dispatch(ev);
+  renderer.update(sdt, game);
+  renderer.draw(game);
+  syncHud();
+  requestAnimationFrame(loop);
+}
+
+resetStage();
+requestAnimationFrame(loop);
+
+})();
+
+</script>
+</body>
+</html>
