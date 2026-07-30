@@ -99,6 +99,17 @@
     color:var(--kin);
     text-shadow:0 0 10px rgba(243,234,216,.95), 1px 1px 0 rgba(43,38,32,.4);
   }
+  #pauseOv{
+    position:absolute;inset:0;z-index:5;cursor:pointer;
+    display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+    background:rgba(43,38,32,.55);
+  }
+  #pauseOv b{
+    font-family:"Yuji Syuku",serif;font-weight:400;
+    font-size:clamp(24px,5vw,36px);letter-spacing:.3em;color:var(--washi);
+    text-shadow:2px 2px 0 rgba(43,38,32,.5);
+  }
+  #pauseOv small{font-size:11px;color:var(--kage);letter-spacing:.1em;}
   .chainline{
     display:flex;align-items:center;gap:8px;
     padding:5px 14px 0;font-size:11.5px;font-weight:700;color:#7a6f5c;
@@ -202,6 +213,7 @@
     <canvas id="cv"></canvas>
     <div id="banner"></div>
     <div id="renkei"><span class="pair" id="rkPair"></span><span class="cnt" id="rkCnt"></span></div>
+    <div id="pauseOv"><b>一時停止</b><small>画面を押すと再開</small></div>
   </div>
 
   <div class="chainline">
@@ -215,6 +227,7 @@
     <button id="upBtn">気脈Lv<span id="wLv">1</span>up 氣<span id="upCost">80</span></button>
     <button id="sndBtn">🔊</button>
     <button id="speedBtn">⏩ x1</button>
+    <button id="pauseBtn">⏸</button>
   </div>
 
   <div class="deck" id="deck"></div>
@@ -225,7 +238,7 @@
     <span><b>刻</b>:金枠の干支は今が見せ場</span>
   </div>
 
-  <footer>十二支に入れなかった化け猫たちが「十三番目の椅子」を求めて攻め寄せる。<br>昔ばなし「十二支のはじまり」より ─ 個人開発プロトタイプ(仮題・商標確認前)</footer>
+  <footer>十二支に入れなかった化け猫たちが「十三番目の椅子」を求めて攻め寄せる。<br>昔ばなし「十二支のはじまり」より ─ 個人開発プロトタイプ(仮題)</footer>
 </div>
 
 <div id="overlay">
@@ -263,9 +276,9 @@ const CONST = {
   START_MONEY: 200,       // 基本の初期気
   KB_SPEED: 170,          // ノックバック後退速度
   KB_TIME: 0.32,          // ノックバック時間
-  BOSS_PACE_MUL: 2.5,     // ボス出現後の増援間隔倍率
-  COMBO_BASE: 1.2,        // 順番連携の基礎倍率
-  COMBO_PER_CHAIN: 0.1,   // 連鎖ごとの追加倍率
+  BOSS_PACE_MUL: 2.2,     // ボス出現後の増援間隔倍率
+  COMBO_BASE: 1.15,       // 順番連携の基礎倍率
+  COMBO_PER_CHAIN: 0.08,  // 連鎖ごとの追加倍率
   COMBO_CHAIN_CAP: 4,     // 連鎖倍率の上限段数
   TRINE_MUL: 1.15,        // 三合(同局2体以上)の攻撃倍率
   TOKI_ATK_MUL: 1.5,      // 刻一致の攻撃倍率
@@ -299,10 +312,10 @@ const CATS = {
   kobake:    {svg:"kobake",  emoji:"😸", name:"仔化け",   hp:70,   atk:18,  spd:85, range:22,  kb:1, size:13, bounty:30},
   kamaitachi:{svg:"kaze",    emoji:"😼", name:"風猫",     hp:115,  atk:42,  spd:75, range:24,  kb:2, size:16, bounty:65},
   tate:      {svg:"tate",    emoji:"🙀", name:"甲羅猫",   hp:600,  atk:18,  spd:19, range:26,  kb:1, size:20, bounty:120},
-  nage:      {svg:"nage",    emoji:"🐈", name:"礫猫",     hp:150,  atk:40,  spd:30, range:115, kb:2, size:17, bounty:85},
+  nage:      {svg:"nage",    emoji:"🐈", name:"礫猫",     hp:175,  atk:46,  spd:30, range:115, kb:2, size:17, bounty:85},
   oni:       {svg:"oni",     emoji:"😾", name:"鬼猫",     hp:850,  atk:65,  spd:16, range:26,  kb:2, size:22, bounty:200},
-  kuro:      {svg:"kuro",    emoji:"🐈‍⬛", name:"黒猫将軍", hp:2600, atk:130, spd:13, range:30,  kb:4, size:27, bounty:800, boss:true},
-  nekomata:  {svg:"nekomata",emoji:"😹", name:"猫又大王", hp:3800, atk:140, spd:12, range:55,  kb:5, size:31, bounty:1500, boss:true, area:true, atkInt:2.5},
+  kuro:      {svg:"kuro",    emoji:"🐈‍⬛", name:"黒猫将軍", hp:3400, atk:150, spd:13, range:30,  kb:4, size:27, bounty:800, boss:true},
+  nekomata:  {svg:"nekomata",emoji:"😹", name:"猫又大王", hp:4200, atk:155, spd:14, range:72,  kb:5, size:31, bounty:1500, boss:true, area:true, atkInt:2.2},
 };
 
 /* 全三幕 */
@@ -315,17 +328,17 @@ const STAGES = [
     winMsg:"化け猫を退けた!物見の鼠が告げる──\n「砦の奥に黒き影あり。順番連携と三合を使いこなすのじゃ」",
   },
   {
-    kanji:"二", name:"黒猫将軍の砦", castle:"将軍の砦 🏯", castleHp:3500,
-    pace:(t)=>Math.max(1.8, 6.0 - t*0.032),
+    kanji:"二", name:"黒猫将軍の砦", castle:"将軍の砦 🏯", castleHp:3800,
+    pace:(t)=>Math.max(1.7, 6.0 - t*0.034),
     pool:(t)=> t<25 ? ["bake","kobake"] : t<55 ? ["kamaitachi","bake","tate"] : ["kamaitachi","tate","nage","kobake"],
-    bossKey:"kuro", bossAt:0.5,
+    bossKey:"kuro", bossAt:0.6,
     winMsg:"黒猫将軍、討ち取ったり!\n斥候の兎が告げる──「猫又大王の薙ぎ払いは近づく者を全て薙ぐ。\n鶏・蛇・龍の射程から崩すのじゃ」",
   },
   {
-    kanji:"三", name:"決戦 ─ 十三番目の椅子", castle:"猫又城 🏯", castleHp:4200,
-    pace:(t)=>Math.max(1.8, 5.8 - t*0.03),
-    pool:(t)=> t<25 ? ["bake","kamaitachi"] : t<60 ? ["tate","nage","kamaitachi"] : t<90 ? ["tate","nage","kamaitachi","kobake"] : ["tate","nage","kamaitachi","kobake","oni"],
-    bossKey:"nekomata", bossAt:0.45, escort:"oni", startMoney:350,
+    kanji:"三", name:"決戦 ─ 十三番目の椅子", castle:"猫又城 🏯", castleHp:4800,
+    pace:(t)=>Math.max(1.6, 5.8 - t*0.032),
+    pool:(t)=> t<25 ? ["bake","kamaitachi"] : t<55 ? ["tate","nage","kamaitachi"] : t<80 ? ["tate","nage","kamaitachi","kobake"] : ["tate","nage","kamaitachi","kobake","oni"],
+    bossKey:"nekomata", bossAt:0.6, escort:"oni", startMoney:350,
     bossHint:"遠距離で崩せ",
     winMsg:"猫又大王は月夜に消えた。十三番目の椅子は誰の手にも渡らず──\n十二支に平和が戻る。来年の干支替わりの日までは。",
   },
@@ -1095,7 +1108,7 @@ const C = D.CONST;
 })();
 
 const $ = id=>document.getElementById(id);
-let stage=0, game=null, speed=1;
+let stage=0, game=null, speed=1, paused=false;
 const renderer = window.EtoRender.createRenderer($("cv"), D, Assets);
 
 /* ---------- DOM演出 ---------- */
@@ -1137,6 +1150,7 @@ function dispatch(ev){
 /* ---------- ステージ管理 ---------- */
 function resetStage(){
   game = Core.createGame({stage, data:D});
+  setPaused(false);
   renderer.reset();
   $("overlay").style.display="none";
   $("renkei").classList.remove("on");
@@ -1210,13 +1224,26 @@ D.UNITS.forEach((u,i)=>{
     <span class="rl">${u.role}</span>
     <span class="cost">氣${u.cost}</span><div class="cd"></div>`;
   c.addEventListener("pointerdown",()=>{
-    if(game.summon(i)) syncHud();
+    if(!paused && game.summon(i)) syncHud();
   });
   deckEl.appendChild(c); deckCards.push(c);
 });
 
 /* ---------- ボタン ---------- */
-$("upBtn").addEventListener("pointerdown",()=>{ if(game.upgrade()) syncHud(); });
+$("upBtn").addEventListener("pointerdown",()=>{ if(!paused && game.upgrade()) syncHud(); });
+
+/* 一時停止:進行(step)だけ止め、描画は最後のフレームを保持する */
+function setPaused(p){
+  if(game && game.over) p=false;
+  paused=p;
+  $("pauseBtn").textContent=paused?"▶":"⏸";
+  $("pauseOv").style.display=paused?"flex":"none";
+}
+$("pauseBtn").addEventListener("pointerdown",()=>setPaused(!paused));
+$("pauseOv").addEventListener("pointerdown",()=>setPaused(false));
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden && game && !game.over) setPaused(true); // タブ離脱で自動停止
+});
 $("sndBtn").addEventListener("pointerdown",()=>{
   Platform.setSound(!Platform.getSound());
   $("sndBtn").textContent=Platform.getSound()?"🔊":"🔇";
@@ -1250,13 +1277,15 @@ let last=performance.now();
 function loop(now){
   const dt=Math.min(0.05,(now-last)/1000);
   last=now;
-  const sdt=dt*speed;
-  game.step(sdt);
-  const evs=game.events.splice(0);
-  for(const ev of evs) dispatch(ev);
-  renderer.update(sdt, game);
-  renderer.draw(game);
-  syncHud();
+  if(!paused){
+    const sdt=dt*speed;
+    game.step(sdt);
+    const evs=game.events.splice(0);
+    for(const ev of evs) dispatch(ev);
+    renderer.update(sdt, game);
+    renderer.draw(game);
+    syncHud();
+  }
   requestAnimationFrame(loop);
 }
 
